@@ -287,17 +287,68 @@ const Index = () => {
                   <div>
                     <label className="text-sm font-medium mb-2 block">Фильтры поиска</label>
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline" className="cursor-pointer">Популярное</Badge>
-                      <Badge variant="outline" className="cursor-pointer">Новое</Badge>
-                      <Badge variant="outline" className="cursor-pointer">Встроенные</Badge>
-                      <Badge variant="outline" className="cursor-pointer">Загруженные</Badge>
+                      <Badge 
+                        variant={activeFilters.includes('popular') ? 'default' : 'outline'} 
+                        className="cursor-pointer"
+                        onClick={() => toggleFilter('popular')}
+                      >
+                        Популярное
+                      </Badge>
+                      <Badge 
+                        variant={activeFilters.includes('new') ? 'default' : 'outline'} 
+                        className="cursor-pointer"
+                        onClick={() => toggleFilter('new')}
+                      >
+                        Новое
+                      </Badge>
+                      <Badge 
+                        variant={activeFilters.includes('built-in') ? 'default' : 'outline'} 
+                        className="cursor-pointer"
+                        onClick={() => toggleFilter('built-in')}
+                      >
+                        Встроенные
+                      </Badge>
+                      <Badge 
+                        variant={activeFilters.includes('user-uploaded') ? 'default' : 'outline'} 
+                        className="cursor-pointer"
+                        onClick={() => toggleFilter('user-uploaded')}
+                      >
+                        Загруженные
+                      </Badge>
                     </div>
                   </div>
                   <div>
                     <label className="text-sm font-medium mb-2 block">Тема сайта</label>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">Тёмная</Button>
-                      <Button variant="outline" size="sm">Светлая</Button>
+                      <Button 
+                        variant={theme === 'dark' ? 'default' : 'outline'} 
+                        size="sm"
+                        onClick={() => setTheme('dark')}
+                      >
+                        <Icon name="Moon" className="mr-2" size={16} />
+                        Тёмная
+                      </Button>
+                      <Button 
+                        variant={theme === 'light' ? 'default' : 'outline'} 
+                        size="sm"
+                        onClick={() => setTheme('light')}
+                      >
+                        <Icon name="Sun" className="mr-2" size={16} />
+                        Светлая
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Стиль отображения</label>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm">
+                        <Icon name="Grid" className="mr-2" size={16} />
+                        Сетка
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <Icon name="List" className="mr-2" size={16} />
+                        Список
+                      </Button>
                     </div>
                   </div>
                 </div>
