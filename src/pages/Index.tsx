@@ -33,9 +33,9 @@ const SAMPLE_WALLPAPERS: Wallpaper[] = [
     image_url: 'https://cdn.poehali.dev/projects/ae42d029-729c-481b-aa08-d150183ddd31/files/22ee280f-8b09-4805-b3fa-87248c2f1451.jpg',
     source_type: 'built-in',
     author: 'TheMe',
-    rating: 4.8,
-    download_count: 1250,
-    views: 3420
+    rating: 0,
+    download_count: 0,
+    views: 0
   },
   {
     id: 2,
@@ -43,9 +43,9 @@ const SAMPLE_WALLPAPERS: Wallpaper[] = [
     image_url: 'https://cdn.poehali.dev/projects/ae42d029-729c-481b-aa08-d150183ddd31/files/79880b85-e63c-4c3b-97a5-27ba472fa2ad.jpg',
     source_type: 'built-in',
     author: 'TheMe',
-    rating: 4.6,
-    download_count: 890,
-    views: 2150
+    rating: 0,
+    download_count: 0,
+    views: 0
   },
   {
     id: 3,
@@ -53,9 +53,9 @@ const SAMPLE_WALLPAPERS: Wallpaper[] = [
     image_url: 'https://cdn.poehali.dev/projects/ae42d029-729c-481b-aa08-d150183ddd31/files/e5914642-f0d8-4be3-8f0c-90684315a031.jpg',
     source_type: 'built-in',
     author: 'TheMe',
-    rating: 4.9,
-    download_count: 2100,
-    views: 5890
+    rating: 0,
+    download_count: 0,
+    views: 0
   },
   {
     id: 4,
@@ -63,9 +63,9 @@ const SAMPLE_WALLPAPERS: Wallpaper[] = [
     image_url: 'https://cdn.poehali.dev/projects/ae42d029-729c-481b-aa08-d150183ddd31/files/22ee280f-8b09-4805-b3fa-87248c2f1451.jpg',
     source_type: 'built-in',
     author: 'TheMe',
-    rating: 4.7,
-    download_count: 780,
-    views: 1890
+    rating: 0,
+    download_count: 0,
+    views: 0
   },
   {
     id: 5,
@@ -73,9 +73,9 @@ const SAMPLE_WALLPAPERS: Wallpaper[] = [
     image_url: 'https://cdn.poehali.dev/projects/ae42d029-729c-481b-aa08-d150183ddd31/files/79880b85-e63c-4c3b-97a5-27ba472fa2ad.jpg',
     source_type: 'user-uploaded',
     author: 'User123',
-    rating: 4.2,
-    download_count: 456,
-    views: 1200
+    rating: 0,
+    download_count: 0,
+    views: 0
   },
   {
     id: 6,
@@ -83,9 +83,9 @@ const SAMPLE_WALLPAPERS: Wallpaper[] = [
     image_url: 'https://cdn.poehali.dev/projects/ae42d029-729c-481b-aa08-d150183ddd31/files/e5914642-f0d8-4be3-8f0c-90684315a031.jpg',
     source_type: 'user-uploaded',
     author: 'PhotoPro',
-    rating: 4.5,
-    download_count: 920,
-    views: 2340
+    rating: 0,
+    download_count: 0,
+    views: 0
   }
 ]
 
