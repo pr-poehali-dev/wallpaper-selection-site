@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Icon from '@/components/ui/icon'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Label } from '@/components/ui/label'
+import { useToast } from '@/hooks/use-toast'
 
 interface Wallpaper {
   id: number
@@ -25,6 +27,15 @@ interface Comment {
   comment_text: string
   created_at: string
 }
+
+interface User {
+  id: number
+  username: string
+  email: string
+}
+
+const AUTH_URL = 'https://functions.poehali.dev/7ed20eeb-42ff-4ad9-835a-7cbb7b792e85'
+const WALLPAPERS_URL = 'https://functions.poehali.dev/d8e10ea9-60f6-41bb-8c84-52db3d5559e8'
 
 const SAMPLE_WALLPAPERS: Wallpaper[] = [
   {
@@ -90,47 +101,154 @@ const SAMPLE_WALLPAPERS: Wallpaper[] = [
 ]
 
 const Index = () => {
+  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState<'popular' | 'gallery' | 'profile'>('popular')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedWallpaper, setSelectedWallpaper] = useState<Wallpaper | null>(null)
   const [userRating, setUserRating] = useState(0)
   const [hoveredStar, setHoveredStar] = useState(0)
   const [newComment, setNewComment] = useState('')
-  const [comments, setComments] = useState<Comment[]>([
-    { id: 1, username: 'User1', comment_text: 'Amazing wallpaper!', created_at: '2025-11-10' },
-    { id: 2, username: 'User2', comment_text: 'Perfect for my phone', created_at: '2025-11-09' }
-  ])
+  const [comments, setComments] = useState<Comment[]>([])
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [activeFilters, setActiveFilters] = useState<string[]>([])
+  
+  const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+  const [showAuthDialog, setShowAuthDialog] = useState(false)
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
+  const [authForm, setAuthForm] = useState({ username: '', email: '', password: '' })
+  const [wallpapers, setWallpapers] = useState<Wallpaper[]>(SAMPLE_WALLPAPERS)
+  
+  useEffect(() => {
+    const savedToken = localStorage.getItem('token')
+    const savedUser = localStorage.getItem('user')
+    if (savedToken && savedUser) {
+      setToken(savedToken)
+      setUser(JSON.parse(savedUser))
+    }
+    loadWallpapers()
+  }, [])
 
-  const filteredWallpapers = SAMPLE_WALLPAPERS.filter(w =>
+  const loadWallpapers = async () => {
+    const response = await fetch(WALLPAPERS_URL)
+    const data = await response.json()
+    if (data.wallpapers && data.wallpapers.length > 0) {
+      setWallpapers(data.wallpapers)
+    }
+  }
+  
+  const handleAuth = async () => {
+    const body = authMode === 'register' 
+      ? { action: 'register', ...authForm }
+      : { action: 'login', username: authForm.username, password: authForm.password }
+    
+    const response = await fetch(AUTH_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+    
+    const data = await response.json()
+    
+    if (response.ok) {
+      setToken(data.token)
+      setUser(data.user)
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+      setShowAuthDialog(false)
+      setAuthForm({ username: '', email: '', password: '' })
+      toast({ title: 'Успех!', description: authMode === 'register' ? 'Регистрация завершена' : 'Вы вошли в систему' })
+    } else {
+      toast({ title: 'Ошибка', description: data.error, variant: 'destructive' })
+    }
+  }
+  
+  const handleLogout = () => {
+    setUser(null)
+    setToken(null)
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    toast({ title: 'Вы вышли из системы' })
+  }
+  
+  const filteredWallpapers = wallpapers.filter(w =>
     w.title.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const popularWallpapers = [...SAMPLE_WALLPAPERS].sort((a, b) => b.rating - a.rating).slice(0, 6)
+  const popularWallpapers = [...wallpapers].sort((a, b) => b.rating - a.rating).slice(0, 6)
 
-  const handleDownload = (wallpaper: Wallpaper) => {
+  const handleDownload = async (wallpaper: Wallpaper) => {
+    await fetch(WALLPAPERS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'download', wallpaper_id: wallpaper.id })
+    })
+    
     const link = document.createElement('a')
     link.href = wallpaper.image_url
     link.download = `${wallpaper.title}.jpg`
     link.click()
+    toast({ title: 'Загрузка началась!' })
   }
 
-  const handleRatingSubmit = () => {
+  const handleRatingSubmit = async () => {
     if (userRating > 0 && selectedWallpaper) {
-      selectedWallpaper.rating = ((selectedWallpaper.rating * 10 + userRating) / 11)
-      setUserRating(0)
+      if (!user) {
+        toast({ title: 'Требуется авторизация', description: 'Войдите чтобы оценить', variant: 'destructive' })
+        return
+      }
+      
+      const response = await fetch(WALLPAPERS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'rate',
+          wallpaper_id: selectedWallpaper.id,
+          user_id: user.id,
+          rating: userRating
+        })
+      })
+      
+      const data = await response.json()
+      if (response.ok) {
+        selectedWallpaper.rating = data.avg_rating
+        setUserRating(0)
+        toast({ title: 'Оценка сохранена!' })
+        loadWallpapers()
+      }
     }
   }
 
-  const handleCommentSubmit = () => {
-    if (newComment.trim()) {
-      const comment: Comment = {
-        id: comments.length + 1,
-        username: 'Вы',
-        comment_text: newComment,
-        created_at: new Date().toLocaleDateString('ru-RU')
+  const handleCommentSubmit = async () => {
+    if (newComment.trim() && selectedWallpaper) {
+      if (!user) {
+        toast({ title: 'Требуется авторизация', description: 'Войдите чтобы комментировать', variant: 'destructive' })
+        return
       }
-      setComments([comment, ...comments])
-      setNewComment('')
+      
+      const response = await fetch(WALLPAPERS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'comment',
+          wallpaper_id: selectedWallpaper.id,
+          user_id: user.id,
+          username: user.username,
+          comment_text: newComment
+        })
+      })
+      
+      if (response.ok) {
+        const comment: Comment = {
+          id: comments.length + 1,
+          username: user.username,
+          comment_text: newComment,
+          created_at: new Date().toLocaleDateString('ru-RU')
+        }
+        setComments([comment, ...comments])
+        setNewComment('')
+        toast({ title: 'Комментарий добавлен!' })
+      }
     }
   }
 
@@ -195,7 +313,7 @@ const Index = () => {
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               TheMe
             </h1>
-            <nav className="flex gap-2">
+            <nav className="flex gap-2 items-center">
               <Button
                 variant={activeTab === 'popular' ? 'default' : 'ghost'}
                 onClick={() => setActiveTab('popular')}
@@ -217,6 +335,19 @@ const Index = () => {
                 <Icon name="User" className="mr-2" size={18} />
                 Профиль
               </Button>
+              {user ? (
+                <div className="flex items-center gap-2 ml-4">
+                  <span className="text-sm text-muted-foreground">{user.username}</span>
+                  <Button variant="outline" size="sm" onClick={handleLogout}>
+                    Выйти
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="outline" size="sm" className="ml-4" onClick={() => setShowAuthDialog(true)}>
+                  <Icon name="LogIn" className="mr-2" size={16} />
+                  Войти
+                </Button>
+              )}
             </nav>
           </div>
         </div>
@@ -451,6 +582,57 @@ const Index = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{authMode === 'login' ? 'Вход' : 'Регистрация'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="username">Имя пользователя</Label>
+              <Input
+                id="username"
+                value={authForm.username}
+                onChange={(e) => setAuthForm({ ...authForm, username: e.target.value })}
+                placeholder="username"
+              />
+            </div>
+            {authMode === 'register' && (
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={authForm.email}
+                  onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
+                  placeholder="email@example.com"
+                />
+              </div>
+            )}
+            <div>
+              <Label htmlFor="password">Пароль</Label>
+              <Input
+                id="password"
+                type="password"
+                value={authForm.password}
+                onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
+                placeholder="••••••••"
+              />
+            </div>
+            <Button onClick={handleAuth} className="w-full">
+              {authMode === 'login' ? 'Войти' : 'Зарегистрироваться'}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+              className="w-full"
+            >
+              {authMode === 'login' ? 'Нет аккаунта? Зарегистрируйтесь' : 'Уже есть аккаунт? Войдите'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

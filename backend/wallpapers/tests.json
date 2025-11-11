@@ -1,0 +1,29 @@
+{
+  "tests": [
+    {
+      "name": "Get all wallpapers",
+      "method": "GET",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "wallpapers": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Upload wallpaper",
+      "method": "POST",
+      "body": {
+        "action": "upload",
+        "title": "Test Wallpaper",
+        "image_url": "https://example.com/image.jpg",
+        "author": "TestUser"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "id": "number",
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
